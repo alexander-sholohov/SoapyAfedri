@@ -14,7 +14,7 @@
 SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels,
                                             const SoapySDR::Kwargs & /*args*/)
 {
-    SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in setupStream");
+    SoapySDR::logf(SOAPY_SDR_WARNING, "Afedri in setupStream. Num_channels=%d, format=%s", channels.size(), format.c_str());
 
     if (direction != SOAPY_SDR_RX)
     {
@@ -24,6 +24,7 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
     // Check the channel configuration
     if (channels.size() > _num_channels || channels.size() > 4)
     {
+        SoapySDR::log(SOAPY_SDR_ERROR, "invalid number of channels");
         throw std::runtime_error("setupStream invalid number of channels");
     }
 
@@ -31,6 +32,7 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
     {
         if (ch >= _num_channels || ch >= 4)
         {
+            SoapySDR::log(SOAPY_SDR_ERROR, "invalid number of channels");
             throw std::runtime_error("setupStream invalid channel selection");
         }
     }
@@ -50,8 +52,16 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
     }
     else
     {
+        SoapySDR::log(SOAPY_SDR_ERROR, "Invalid stream format");
         throw std::runtime_error("setupStream invalid format '" + format +
                                  "' -- Only CS16, and CF32 are supported by AfedriDevice module.");
+    }
+
+    // Force make 0 channel if no channel was provided.
+    auto channels_checked = channels;
+    if (channels_checked.empty())
+    {
+        channels_checked.push_back(0);
     }
 
     int just_obtained_stream_id;
@@ -59,7 +69,7 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
     {
         std::unique_lock<std::mutex> lock(_streams_protect_mtx);
         just_obtained_stream_id = _stream_sequence_provider++;
-        _configured_streams[just_obtained_stream_id] = StreamContext{channels, selected_format};
+        _configured_streams[just_obtained_stream_id] = StreamContext{channels_checked, selected_format};
     }
 
     return (SoapySDR::Stream *)(new int(just_obtained_stream_id));
