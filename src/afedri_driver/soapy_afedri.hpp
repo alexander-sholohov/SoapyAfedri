@@ -118,7 +118,11 @@ class AfedriDevice : public SoapySDR::Device
     /*******************************************************************
      * Antenna API
      ******************************************************************/
+    std::vector<std::string> listAntennas(const int direction, const size_t channel) const override;
+
     void setAntenna(const int direction, const size_t channel, const std::string &name) override;
+
+    std::string getAntenna(const int direction, const size_t channel) const override;
 
     /*******************************************************************
      * Settings API
@@ -151,6 +155,7 @@ class AfedriDevice : public SoapySDR::Device
     double _saved_frequency;
     double _saved_sample_rate;
     double _saved_bandwidth;
+    std::string _saved_antenna;
 
     std::unique_ptr<UdpRxContextDefer> _udp_rx_thread_defer;
     AfedriControl::VersionInfo _version_info;
