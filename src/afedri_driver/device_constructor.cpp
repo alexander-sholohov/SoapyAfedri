@@ -48,6 +48,32 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
         ac.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
     }
 
+    if (_num_channels == 0 && _afedri_rx_mode != -1)
+    {
+        if (_afedri_rx_mode == 1 || _afedri_rx_mode == 2)
+        {
+            _num_channels = 2;
+        }
+        else if (_afedri_rx_mode == 4 || _afedri_rx_mode == 5)
+        {
+            _num_channels = 4;
+        }
+        else
+        {
+            _num_channels = 1;
+        }
+    }
+    else
+    {
+        _num_channels = 1;
+    }
+
+    SoapySDR::logf(SOAPY_SDR_INFO, "Afedri _num_channels=%d", _num_channels);
+
+    auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // What channel to use here?
+    ac.set_r820t_lna_agc(ch, 0);
+    ac.set_r820t_mixer_agc(ch, 0);
+
     // Create UDP Rx process
     try
     {

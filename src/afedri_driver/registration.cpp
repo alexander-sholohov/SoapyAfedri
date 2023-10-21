@@ -27,7 +27,7 @@ struct Params
     bool is_address_present{};
     bool is_port_present{};
     int rx_mode{-1};                // not set by default
-    int num_channels{1};            // 1 by default
+    int num_channels{0};            // 0 - means must be set automatically
     int force_selected_channel{-1}; // not active by default
 
     std::string make_address_port() const
@@ -70,6 +70,16 @@ Params Params::make_from_kwargs(const SoapySDR::Kwargs &args)
         res.bind_port = res.port; // use the same value for bind_port. Can be overwritten later.
     }
 
+    if (args.count("bind_address"))
+    {
+        res.bind_address = args.at("bind_address");
+    }
+
+    if (args.count("bind_port"))
+    {
+        res.bind_port = std::stoi(args.at("bind_port"));
+    }
+
     if (args.count("rx_mode"))
     {
         res.rx_mode = std::stoi(args.at("rx_mode"));
@@ -80,19 +90,9 @@ Params Params::make_from_kwargs(const SoapySDR::Kwargs &args)
         res.num_channels = std::stoi(args.at("num_channels"));
     }
 
-    if (args.count("num_channels"))
-    {
-        res.num_channels = std::stoi(args.at("num_channels"));
-    }
-
     if (args.count("force_set_channel"))
     {
         res.force_selected_channel = std::stoi(args.at("force_set_channel"));
-    }
-
-    if (args.count("bind_port"))
-    {
-        res.bind_port = std::stoi(args.at("bind_port"));
     }
 
     return res;
