@@ -17,7 +17,7 @@ void AfedriDevice::setSampleRate(const int direction, const size_t channel, cons
     AfedriControl ac(_address, _port);
     ac.set_sample_rate(ch, samp_rate);
 
-    const std::uint32_t quartz = _version_info.main_clock_frequency; // For me it was 76.8e6f
+    const std::uint32_t quartz = _version_info.main_clock_frequency; // For me it was 76_800_000
     const std::uint32_t actual_samp_rate = AfedriControl::calc_actual_sample_rate(quartz, samp_rate);
     auto level = (actual_samp_rate == samp_rate) ? SOAPY_SDR_INFO : SOAPY_SDR_WARNING;
     SoapySDR_logf(level, "Afedri: Set sample rate as %d, actual sample rate will be %d, quartz=%d", samp_rate, actual_samp_rate, quartz);
