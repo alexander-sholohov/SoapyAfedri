@@ -45,6 +45,8 @@ if(NOT SoapySDR_FOUND)
   return()
 endif()
 
+find_package(Threads REQUIRED)
+
 include_directories(${AFEDRI_INCLUDE_DIRS})
 include_directories("src/utils")
 SOAPY_SDR_MODULE_UTIL(
@@ -71,6 +73,8 @@ SOAPY_SDR_MODULE_UTIL(
 
   LIBRARIES ${AFEDRI_LIBRARIES}
 )
+
+target_link_libraries(afedriDevice PRIVATE Threads::Threads)
 
 if(WIN32)
   target_link_libraries(afedriDevice PRIVATE ws2_32)
