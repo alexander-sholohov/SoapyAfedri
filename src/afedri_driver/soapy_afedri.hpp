@@ -9,9 +9,15 @@
 
 struct StreamContext
 {
+    StreamContext() = default;
+    StreamContext(std::vector<size_t> channels, std::string format, bool active)
+        : channels(std::move(channels)), format(std::move(format)), active(active)
+    {
+    }
+
     std::vector<size_t> channels;
     std::string format;
-    bool active{false};
+    bool active;
 };
 
 /***********************************************************************

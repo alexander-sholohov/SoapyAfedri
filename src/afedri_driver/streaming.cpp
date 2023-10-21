@@ -9,7 +9,6 @@
 #include "udp_rx.hpp"
 
 #include <cstring>
-#include <numeric>
 
 SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels,
                                             const SoapySDR::Kwargs & /*args*/)
@@ -69,7 +68,7 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
     {
         std::unique_lock<std::mutex> lock(_streams_protect_mtx);
         just_obtained_stream_id = _stream_sequence_provider++;
-        _configured_streams[just_obtained_stream_id] = StreamContext{channels_checked, selected_format};
+        _configured_streams[just_obtained_stream_id] = StreamContext(channels_checked, selected_format, false);
     }
 
     return (SoapySDR::Stream *)(new int(just_obtained_stream_id));
@@ -132,8 +131,14 @@ int AfedriDevice::deactivateStream(SoapySDR::Stream *stream, const int flags, co
     stream_context.active = false;
 
     // Calculate number of active streams.
-    auto pred = [](int acc, auto const &it) { return acc + (it.second.active ? 1 : 0); };
-    int num_active_streams = std::accumulate(_configured_streams.begin(), _configured_streams.end(), 0, pred);
+    int num_active_streams = 0;
+    for (auto const &item : _configured_streams)
+    {
+        if (item.second.active)
+        {
+            num_active_streams++;
+        }
+    }
     if (num_active_streams == 0)
     {
         AfedriControl ac(_address, _port);
