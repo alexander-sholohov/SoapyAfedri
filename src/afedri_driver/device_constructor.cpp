@@ -63,7 +63,7 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
             _num_channels = 1;
         }
     }
-    else
+    else if (_num_channels == 0 || _num_channels > 4)
     {
         _num_channels = 1;
     }
