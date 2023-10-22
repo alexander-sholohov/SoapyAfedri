@@ -9,6 +9,7 @@
 #include "udp_rx.hpp"
 
 #include <cstring>
+#include <sstream>
 
 SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels,
                                             const SoapySDR::Kwargs & /*args*/)
@@ -49,6 +50,20 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
     for (size_t idx = 0; idx < wrk_channels.size(); idx++)
     {
         wrk_channels[idx] = remap_channel(wrk_channels[idx]);
+    }
+
+    // Debug output
+    {
+        std::ostringstream ss;
+        ss << "Afedri actual channels: [";
+        for (size_t idx = 0; idx < wrk_channels.size(); idx++)
+        {
+            if (idx != 0) ss << ",";
+            ss << wrk_channels[idx];
+        }
+        ss << "]";
+        auto s = ss.str();
+        SoapySDR::log(SOAPY_SDR_INFO, s.c_str());
     }
 
     std::string selected_format;
