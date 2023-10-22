@@ -17,14 +17,14 @@ static void debug_print_for_thread(std::string const &str)
 }
 
 AfedriDevice::AfedriDevice(std::string const &address, int port, std::string const &bind_address, int bind_port, int afedri_mode,
-                           int num_channels, int force_selected_channel)
+                           int num_channels, int map_ch0)
     : _address(address),
       _port(port),
       _bind_address(bind_address),
       _bind_port(bind_port),
       _afedri_rx_mode(afedri_mode),
       _num_channels(num_channels),
-      _force_selected_channel(force_selected_channel),
+      _map_ch0(map_ch0),
       _stream_sequence_provider(1),
       _saved_frequency(0.0),
       _saved_sample_rate(0.0),
@@ -42,11 +42,23 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
 
     _version_info = ac.get_version_info();
 
-    if (_afedri_rx_mode != -1)
+    // Check rx_mode
+    if (_afedri_rx_mode > 5)
     {
-        auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // What channel to use here?
-        ac.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
+        _afedri_rx_mode = -1;
     }
+
+    if (_afedri_rx_mode > 0)
+    {
+        auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // TODO: Check what channel to use here?
+        ac.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
+        SoapySDR::logf(SOAPY_SDR_WARNING, "Afedri set_rx_mode to %d", _afedri_rx_mode);
+    }
+
+    // Reset r802t AGC for channel 0. TODO: check channel index
+    auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(0));
+    ac.set_r820t_lna_agc(ch, 0);
+    ac.set_r820t_mixer_agc(ch, 0);
 
     if (_num_channels == 0 && _afedri_rx_mode != -1)
     {
@@ -70,9 +82,12 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
 
     SoapySDR::logf(SOAPY_SDR_INFO, "Afedri _num_channels=%d", _num_channels);
 
-    auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // What channel to use here?
-    ac.set_r820t_lna_agc(ch, 0);
-    ac.set_r820t_mixer_agc(ch, 0);
+    // prevent remap error
+    if (_map_ch0 >= static_cast<int>(_num_channels))
+    {
+        SoapySDR::log(SOAPY_SDR_WARNING, "Afedri incorrect map_ch0 was reset.");
+        _map_ch0 = -1;
+    }
 
     // Create UDP Rx process
     try

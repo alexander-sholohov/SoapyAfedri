@@ -26,9 +26,9 @@ struct Params
     int bind_port{};
     bool is_address_present{};
     bool is_port_present{};
-    int rx_mode{-1};                // not set by default
-    int num_channels{0};            // 0 - means must be set automatically
-    int force_selected_channel{-1}; // not active by default
+    int rx_mode{-1};     // not set by default
+    int num_channels{0}; // 0 - means must be set automatically
+    int map_ch0{-1};     // not active by default
 
     std::string make_address_port() const
     {
@@ -39,8 +39,7 @@ struct Params
     {
         std::ostringstream ss;
         ss << "driver=" << driver << " address=" << address << " port=" << port << " bind_address=" << bind_address
-           << " bind_port=" << bind_port << " rx_mode=" << rx_mode << " num_channels=" << num_channels
-           << " force_selected_channel=" << force_selected_channel << "";
+           << " bind_port=" << bind_port << " rx_mode=" << rx_mode << " num_channels=" << num_channels << " map_ch0=" << map_ch0 << "";
         return ss.str();
     }
 
@@ -90,9 +89,9 @@ Params Params::make_from_kwargs(const SoapySDR::Kwargs &args)
         res.num_channels = std::stoi(args.at("num_channels"));
     }
 
-    if (args.count("force_set_channel"))
+    if (args.count("map_ch0"))
     {
-        res.force_selected_channel = std::stoi(args.at("force_set_channel"));
+        res.map_ch0 = std::stoi(args.at("map_ch0"));
     }
 
     return res;
@@ -118,7 +117,7 @@ SoapySDR::KwargsList findMyDevice(const SoapySDR::Kwargs &args)
     {
         SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Try to make device for params: %s", params.as_debug_string().c_str());
         AfedriDevice ad(params.address, params.port, params.bind_address, params.bind_port, params.rx_mode, params.num_channels,
-                        params.force_selected_channel);
+                        params.map_ch0);
         auto m = SoapySDR::Kwargs();
         auto label = std::string("afedri :: " + params.make_address_port());
         m["label"] = label;
@@ -153,7 +152,7 @@ SoapySDR::Device *makeMyDevice(const SoapySDR::Kwargs &args)
     SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Making device for params: %s", params.as_debug_string().c_str());
 
     return new AfedriDevice(params.address, params.port, params.bind_address, params.bind_port, params.rx_mode, params.num_channels,
-                            params.force_selected_channel);
+                            params.map_ch0);
 }
 
 /***********************************************************************

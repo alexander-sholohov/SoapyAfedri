@@ -12,7 +12,7 @@ void AfedriDevice::setSampleRate(const int direction, const size_t channel, cons
 {
     const std::uint32_t samp_rate = (std::uint32_t)rate;
 
-    const auto ch = AfedriControl::make_afedri_channel_from_0based_index(channel);
+    const auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(channel));
 
     AfedriControl ac(_address, _port);
     ac.set_sample_rate(ch, samp_rate);

@@ -20,3 +20,8 @@ AfedriControl::VersionInfo const &AfedriDevice::get_version_info() const
 {
     return _version_info;
 }
+
+size_t AfedriDevice::remap_channel(size_t soapy_incoming_channel) const
+{
+    return (_map_ch0 != -1 && soapy_incoming_channel == 0) ? _map_ch0 : soapy_incoming_channel;
+}

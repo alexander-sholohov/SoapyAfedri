@@ -27,7 +27,7 @@ class AfedriDevice : public SoapySDR::Device
 {
   public:
     AfedriDevice(std::string const &address, int port, std::string const &bind_address, int bind_port, int afedri_mode, int num_channels,
-                 int force_selected_channel);
+                 int map_ch0);
 
     std::string getDriverKey(void) const override;
 
@@ -142,16 +142,16 @@ class AfedriDevice : public SoapySDR::Device
     StreamContext &get_stream_context_by_id(int stream_id);
 
   private:
-    int map_to_actual_channel(int incoming_channel) const;
+    size_t remap_channel(size_t soapy_incoming_channel) const;
 
     std::string _address;
     int _port;
     std::string _bind_address;
     int _bind_port;
 
-    int _afedri_rx_mode;         // [0,5] (Single/DualDiversity/Dual/DiversityInternal/QuadDiversity/Quad)
-    size_t _num_channels;        // can be 1,2 or 4.
-    int _force_selected_channel; // -1 if not set
+    int _afedri_rx_mode;  // [0,5] (Single/DualDiversity/Dual/DiversityInternal/QuadDiversity/Quad)
+    size_t _num_channels; // can be 1,2 or 4.
+    int _map_ch0;         // -1 if remap is not active
 
     std::mutex _streams_protect_mtx; // protection for _configured_streams
     int _stream_sequence_provider;

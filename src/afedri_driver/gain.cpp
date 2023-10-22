@@ -36,7 +36,7 @@ void AfedriDevice::setGain(const int direction, const size_t channel, const doub
 void AfedriDevice::setGain(const int /*direction*/, const size_t channel, const std::string &name, const double value)
 {
     SoapySDR_logf(SOAPY_SDR_INFO, "Afedri: setGain Name=%s, Gain=%f ", name.c_str(), value);
-    const auto ch = AfedriControl::make_afedri_channel_from_0based_index(channel);
+    const auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(channel));
     _saved_gains[name] = value;
 
     if (name == RF)

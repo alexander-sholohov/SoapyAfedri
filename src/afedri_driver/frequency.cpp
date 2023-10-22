@@ -13,7 +13,7 @@ void AfedriDevice::setFrequency(const int /*direction*/, const size_t channel, c
     if (name == "RF")
     {
         SoapySDR_logf(SOAPY_SDR_INFO, "Afedri: Setting center freq. channel=%d, freq=%d", (int)channel, (uint32_t)frequency);
-        const auto ch = AfedriControl::make_afedri_channel_from_0based_index(channel);
+        const auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(channel));
         AfedriControl ac(_address, _port);
         ac.set_frequency(ch, (uint32_t)frequency);
 
