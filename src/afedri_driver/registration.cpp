@@ -2,6 +2,8 @@
 //  SPDX-License-Identifier: GPL-3.0-or-later
 #include "soapy_afedri.hpp"
 
+#include "afedri_discovery.hpp"
+
 #include <SoapySDR/Logger.hpp>
 #include <SoapySDR/Registry.hpp>
 
@@ -97,6 +99,17 @@ Params Params::make_from_kwargs(const SoapySDR::Kwargs &args)
     return res;
 }
 
+static void myWSAStartup()
+{
+#ifdef _MSC_VER
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
+        throw std::runtime_error("WSAStartup error");
+    }
+#endif
+}
+
 /***********************************************************************
  * Find available devices
  **********************************************************************/
@@ -104,12 +117,36 @@ SoapySDR::KwargsList findMyDevice(const SoapySDR::Kwargs &args)
 {
     //(void)args;
     SoapySDR::log(SOAPY_SDR_WARNING, "Afedri trying to find device");
+
+    myWSAStartup();
+
     auto params = Params::make_from_kwargs(args);
     auto res = SoapySDR::KwargsList();
 
     if (!params.is_address_present || !params.is_port_present)
     {
-        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Skip device detecting because address or port is not specified");
+        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Neither address nor port has been provided. Run Net discovery method ...");
+
+        const auto devices = AfedriDiscovery::discovery();
+        for (auto const &dev : devices)
+        {
+            auto m = SoapySDR::Kwargs();
+            auto label = std::string("afedri :: " + dev.address + ":" + std::to_string(dev.port));
+            m["label"] = label;
+            m["address"] = dev.address;
+            m["port"] = std::to_string(dev.port);
+            m["serial"] = dev.serial_number;
+            m["version_string"] = dev.name;
+            res.push_back(m);
+
+            SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: device detected: %s", label.c_str());
+        }
+
+        if (devices.empty())
+        {
+            SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: no any device found");
+        }
+
         return res;
     }
 
@@ -142,6 +179,8 @@ SoapySDR::KwargsList findMyDevice(const SoapySDR::Kwargs &args)
 SoapySDR::Device *makeMyDevice(const SoapySDR::Kwargs &args)
 {
     //(void)args;
+    myWSAStartup();
+
     SoapySDR::log(SOAPY_SDR_WARNING, "Afedri is making device:");
     for (auto it = args.begin(); it != args.end(); ++it)
     {

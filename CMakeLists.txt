@@ -66,6 +66,8 @@ SOAPY_SDR_MODULE_UTIL(
   src/utils/simple_tcp_communicator.hpp
   src/utils/afedri_control.cpp
   src/utils/afedri_control.hpp
+  src/utils/afedri_discovery.cpp
+  src/utils/afedri_discovery.hpp
   src/utils/buffer.hpp
   src/utils/buffer.cpp
   src/utils/udp_rx.cpp

@@ -30,14 +30,6 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
       _saved_sample_rate(0.0),
       _saved_bandwidth(0.0)
 {
-#ifdef _MSC_VER
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-    {
-        throw std::runtime_error("WSAStartup error");
-    }
-#endif
-
     AfedriControl ac(_address, _port);
 
     _version_info = ac.get_version_info();
