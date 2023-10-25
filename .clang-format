@@ -5,4 +5,3 @@ PackConstructorInitializers: NextLineOnly
 ColumnLimit:   140
 AlignEscapedNewlines: DontAlign
 InsertNewlineAtEOF:   true
-header-insertion: never
