@@ -31,5 +31,10 @@ sudo cmake --install .
 ## Probing Soapy Afedri:
 
 ```shell
+SoapySDRUtil --find
 SoapySDRUtil --probe="driver=afedri,address=192.168.1.41,port=61000"
 ```
+
+### Tested with:
+- OpenWebRX
+- SDR++
