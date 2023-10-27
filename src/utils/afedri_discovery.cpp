@@ -295,12 +295,12 @@ static void probe_interface(AfedriDiscovery::InterfaceItem const &addr, std::vec
 
     //
     // Broadcast UDP receiving are slightly different on Linux and Windows.
-    // It works for me for Linux and Windwos, but I'm not sure it is correct in general.
+    // This solution works for me for Linux/Windwos/macOS, but I'm not sure it is correct in general.
     //
 #ifdef _WIN32
     sockaddr_rx.sin_addr = addr.bind_address;
 #else
-    sockaddr_rx.sin_addr.s_addr = INADDR_BROADCAST;
+    sockaddr_rx.sin_addr.s_addr = INADDR_ANY;
 #endif
 
     if (bind(rx_sock, (struct sockaddr *)&sockaddr_rx, sizeof(sockaddr_rx)) < 0)
