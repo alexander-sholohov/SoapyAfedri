@@ -118,7 +118,9 @@ SoapySDR::Kwargs AfedriDevice::getHardwareInfo(void) const
     m["interface_version"] = _version_info.interface_version;
     m["main_clock_frequency"] = std::to_string(_version_info.main_clock_frequency);
     m["diversity_mode"] = std::to_string(_version_info.diversity_mode);
+
     m["soapy_afedri_driver_version"] = VERSION;
+    m["origin"] = "https://github.com/alexander-sholohov/SoapyAfedri";
 
     return m;
 }
