@@ -17,7 +17,7 @@ SimpleTcpCommunicator::SimpleTcpCommunicator(std::string const &address, int por
         throw ConnectError("socket error");
 
         // Simple way to make connect timeout (Linux only)
-#ifndef _MSC_VER
+#ifndef _WIN32
     int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
     setsockopt(_sock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
 #endif

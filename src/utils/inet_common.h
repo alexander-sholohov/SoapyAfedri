@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <winsock2.h> /* htonll */
 #include <ws2tcpip.h> /* addrinfo */
 

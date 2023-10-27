@@ -101,7 +101,7 @@ Params Params::make_from_kwargs(const SoapySDR::Kwargs &args)
 
 static void myWSAStartup()
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {

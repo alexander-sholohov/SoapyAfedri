@@ -11,7 +11,7 @@
 // Win32 solution from
 // https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <iphlpapi.h>
 #define MALLOC(x) HeapAlloc(GetProcessHeap(), 0, (x))
 #define FREE(x) HeapFree(GetProcessHeap(), 0, (x))
@@ -173,7 +173,7 @@ static std::vector<AfedriDiscovery::InterfaceItem> _enum_addresses_posix()
 
 std::vector<AfedriDiscovery::InterfaceItem> AfedriDiscovery::enum_addresses()
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
     return _enum_addresses_win32();
 #else
     return _enum_addresses_posix();
@@ -297,7 +297,7 @@ static void probe_interface(AfedriDiscovery::InterfaceItem const &addr, std::vec
     // Broadcast UDP receiving are slightly different on Linux and Windows.
     // It works for me for Linux and Windwos, but I'm not sure it is correct in general.
     //
-#ifdef _MSC_VER
+#ifdef _WIN32
     sockaddr_rx.sin_addr = addr.bind_address;
 #else
     sockaddr_rx.sin_addr.s_addr = INADDR_BROADCAST;
