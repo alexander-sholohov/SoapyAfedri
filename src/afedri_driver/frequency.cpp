@@ -21,7 +21,7 @@ void AfedriDevice::setFrequency(const int /*direction*/, const size_t channel, c
     }
     else
     {
-        SoapySDR_logf(SOAPY_SDR_WARNING, "Afedri: try to set frequency for wrong name: %s", name);
+        SoapySDR_logf(SOAPY_SDR_WARNING, "Afedri: try to set frequency for wrong name: %s", name.c_str());
     }
 }
 
