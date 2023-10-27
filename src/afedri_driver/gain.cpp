@@ -28,7 +28,7 @@ std::vector<std::string> AfedriDevice::listGains(const int /*direction*/, const 
     return results;
 }
 
-void AfedriDevice::setGain(const int direction, const size_t channel, const double value)
+void AfedriDevice::setGain(const int /* direction */, const size_t /* channel */, const double /* value */)
 {
     SoapySDR_logf(SOAPY_SDR_WARNING, "Afedri: General setGain not supported.");
 }

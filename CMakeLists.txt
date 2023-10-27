@@ -25,10 +25,6 @@ set(AFEDRI_LIBRARIES "")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
-endif()
-
 # network libraries
 if(WIN32)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)

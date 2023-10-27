@@ -25,7 +25,7 @@ void AfedriDevice::setFrequency(const int /*direction*/, const size_t channel, c
     }
 }
 
-double AfedriDevice::getFrequency(const int direction, const size_t channel, const std::string &name) const
+double AfedriDevice::getFrequency(const int /* direction */, const size_t /* channel */, const std::string &name) const
 {
     if (name == "RF")
     {
@@ -35,14 +35,14 @@ double AfedriDevice::getFrequency(const int direction, const size_t channel, con
     return 0.0;
 }
 
-std::vector<std::string> AfedriDevice::listFrequencies(const int direction, const size_t channel) const
+std::vector<std::string> AfedriDevice::listFrequencies(const int /* direction */, const size_t /* channel */) const
 {
     std::vector<std::string> names;
     names.push_back("RF");
     return names;
 }
 
-SoapySDR::RangeList AfedriDevice::getFrequencyRange(const int direction, const size_t channel, const std::string &name) const
+SoapySDR::RangeList AfedriDevice::getFrequencyRange(const int /* direction */, const size_t /* channel */, const std::string &name) const
 {
     SoapySDR::RangeList results;
     if (name == "RF")
@@ -55,7 +55,7 @@ SoapySDR::RangeList AfedriDevice::getFrequencyRange(const int direction, const s
     return results;
 }
 
-SoapySDR::ArgInfoList AfedriDevice::getFrequencyArgsInfo(const int direction, const size_t channel) const
+SoapySDR::ArgInfoList AfedriDevice::getFrequencyArgsInfo(const int /* direction */, const size_t /* channel */) const
 {
     // TODO:
     return SoapySDR::ArgInfoList();

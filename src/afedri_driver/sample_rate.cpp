@@ -8,7 +8,7 @@
 #include "afedri_control.hpp"
 #include "udp_rx.hpp"
 
-void AfedriDevice::setSampleRate(const int direction, const size_t channel, const double rate)
+void AfedriDevice::setSampleRate(const int /* direction */, const size_t channel, const double rate)
 {
     const std::uint32_t samp_rate = (std::uint32_t)rate;
 
@@ -25,12 +25,12 @@ void AfedriDevice::setSampleRate(const int direction, const size_t channel, cons
     _saved_sample_rate = (double)actual_samp_rate;
 }
 
-double AfedriDevice::getSampleRate(const int direction, const size_t channel) const
+double AfedriDevice::getSampleRate(const int /* direction */, const size_t /* channel */) const
 {
     return _saved_sample_rate;
 }
 
-std::vector<double> AfedriDevice::listSampleRates(const int direction, const size_t channel) const
+std::vector<double> AfedriDevice::listSampleRates(const int /* direction */, const size_t /* channel */) const
 {
     std::vector<double> results;
 
@@ -65,20 +65,20 @@ std::vector<double> AfedriDevice::listSampleRates(const int direction, const siz
     return results;
 }
 
-SoapySDR::RangeList AfedriDevice::getSampleRateRange(const int direction, const size_t channel) const
+SoapySDR::RangeList AfedriDevice::getSampleRateRange(const int /* direction */, const size_t /* channel */) const
 {
     SoapySDR::RangeList results;
     results.push_back(SoapySDR::Range(48e3, 2.4e6));
     return results;
 }
 
-void AfedriDevice::setBandwidth(const int direction, const size_t channel, const double bw)
+void AfedriDevice::setBandwidth(const int /* direction */, const size_t /* channel */, const double bw)
 {
     // We do not have bandwidth concept.
     _saved_bandwidth = bw;
 }
 
-double AfedriDevice::getBandwidth(const int direction, const size_t channel) const
+double AfedriDevice::getBandwidth(const int /* direction */, const size_t /* channel */) const
 {
     if (_saved_bandwidth == 0.0)
     {
@@ -88,13 +88,13 @@ double AfedriDevice::getBandwidth(const int direction, const size_t channel) con
     return _saved_bandwidth;
 }
 
-std::vector<double> AfedriDevice::listBandwidths(const int direction, const size_t channel) const
+std::vector<double> AfedriDevice::listBandwidths(const int /* direction */, const size_t /* channel */) const
 {
     std::vector<double> results;
     return results;
 }
 
-SoapySDR::RangeList AfedriDevice::getBandwidthRange(const int direction, const size_t channel) const
+SoapySDR::RangeList AfedriDevice::getBandwidthRange(const int /* direction */, const size_t /* channel */) const
 {
     SoapySDR::RangeList results;
 
