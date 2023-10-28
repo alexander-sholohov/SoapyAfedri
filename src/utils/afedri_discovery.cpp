@@ -220,12 +220,12 @@ static void net_recv_operation(int rx_sock, std::vector<AfedriDiscovery::AfedriF
     fd_set readfds;
 
     // 5 iterations of 0.1 sec delay -> 0.5 sec per interface
-    for (size_t idx = 0; idx < 5; idx++)
+    for (size_t idx = 0; idx < 10; idx++)
     {
         FD_ZERO(&readfds);
         FD_SET(rx_sock, &readfds);
 
-        struct timeval tv = {0, 100000}; // 0.1 seconds delay
+        struct timeval tv = {0, 50000}; // 0.05 seconds delay
         int ret = select(rx_sock + 1, &readfds, NULL, NULL, &tv);
 
         if (ret > 0)
