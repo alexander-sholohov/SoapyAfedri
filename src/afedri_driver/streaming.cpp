@@ -14,7 +14,7 @@
 SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels,
                                             const SoapySDR::Kwargs & /*args*/)
 {
-    SoapySDR::logf(SOAPY_SDR_WARNING, "Afedri in setupStream. Num_channels=%d, format=%s", channels.size(), format.c_str());
+    SoapySDR::logf(SOAPY_SDR_INFO, "Afedri in setupStream. Num_channels=%d, format=%s", channels.size(), format.c_str());
 
     if (direction != SOAPY_SDR_RX)
     {
@@ -52,31 +52,15 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
         wrk_channels[idx] = remap_channel(wrk_channels[idx]);
     }
 
-    // Debug output
-    {
-        std::ostringstream ss;
-        ss << "Afedri actual channels: [";
-        for (size_t idx = 0; idx < wrk_channels.size(); idx++)
-        {
-            if (idx != 0) ss << ",";
-            ss << wrk_channels[idx];
-        }
-        ss << "]";
-        auto s = ss.str();
-        SoapySDR::log(SOAPY_SDR_INFO, s.c_str());
-    }
-
     std::string selected_format;
 
     // Check the format
     if (format == SOAPY_SDR_CF32)
     {
-        SoapySDR_log(SOAPY_SDR_INFO, "Using format CF32.");
         selected_format = format;
     }
     else if (format == SOAPY_SDR_CS16)
     {
-        SoapySDR_log(SOAPY_SDR_INFO, "Using format CS16.");
         selected_format = format;
     }
     else
@@ -94,16 +78,30 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
         _configured_streams[just_obtained_stream_id] = StreamContext(wrk_channels, selected_format, false);
     }
 
+    // Debug output
+    {
+        std::ostringstream ss;
+        ss << "Afedri: stream_id=" << just_obtained_stream_id << ", actual_channels=[";
+        for (size_t idx = 0; idx < wrk_channels.size(); idx++)
+        {
+            if (idx != 0)
+                ss << ",";
+            ss << wrk_channels[idx];
+        }
+        ss << "], format=" << selected_format;
+        auto s = ss.str();
+        SoapySDR::log(SOAPY_SDR_INFO, s.c_str());
+    }
+
     return (SoapySDR::Stream *)(new int(just_obtained_stream_id));
 }
 
 void AfedriDevice::closeStream(SoapySDR::Stream *stream)
 {
-    SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in closeStream");
+    int stream_id = *reinterpret_cast<int *>(stream);
+    SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in closeStream stream_id=%d", stream_id);
 
     this->deactivateStream(stream, 0, 0);
-
-    int stream_id = *reinterpret_cast<int *>(stream);
 
     {
         std::unique_lock<std::mutex> lock(_streams_protect_mtx);
@@ -120,14 +118,14 @@ size_t AfedriDevice::getStreamMTU(SoapySDR::Stream * /*stream*/) const
 
 int AfedriDevice::activateStream(SoapySDR::Stream *stream, const int flags, const long long /*timeNs*/, const size_t /*numElems*/)
 {
-    SoapySDR::logf(SOAPY_SDR_DEBUG, "in activateStream flags=%d ", flags);
+    const int stream_id = *reinterpret_cast<int *>(stream);
+    SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in activateStream stream_id=%d flags=%d ", stream_id, flags);
 
     if (flags != 0)
     {
         return SOAPY_SDR_NOT_SUPPORTED;
     }
 
-    const int stream_id = *reinterpret_cast<int *>(stream);
     StreamContext &stream_context = get_stream_context_by_id(stream_id);
     stream_context.active = true;
 
@@ -142,14 +140,14 @@ int AfedriDevice::activateStream(SoapySDR::Stream *stream, const int flags, cons
 
 int AfedriDevice::deactivateStream(SoapySDR::Stream *stream, const int flags, const long long /*timeNs*/)
 {
-    SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in deactivateStream flags=%d", flags);
+    const int stream_id = *reinterpret_cast<int *>(stream);
+    SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in deactivateStream stream_id=%d, flags=%d", stream_id, flags);
 
     if (flags != 0)
     {
         return SOAPY_SDR_NOT_SUPPORTED;
     }
 
-    const int stream_id = *reinterpret_cast<int *>(stream);
     StreamContext &stream_context = get_stream_context_by_id(stream_id);
     stream_context.active = false;
 
@@ -162,6 +160,8 @@ int AfedriDevice::deactivateStream(SoapySDR::Stream *stream, const int flags, co
             num_active_streams++;
         }
     }
+
+    SoapySDR::logf(SOAPY_SDR_INFO, "Afedri num_active_streams=%d", num_active_streams);
 
     if (num_active_streams == 0)
     {
