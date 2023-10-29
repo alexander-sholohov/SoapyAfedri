@@ -18,8 +18,10 @@ SimpleTcpCommunicator::SimpleTcpCommunicator(std::string const &address, int por
 
         // Simple way to make connect timeout (Linux only)
 #ifdef __linux
-    int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
-    setsockopt(_sock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
+    {
+        int synRetries = 2; // Send a total of 3 SYN packets => Timeout ~7s
+        setsockopt(_sock, IPPROTO_TCP, TCP_SYNCNT, &synRetries, sizeof(synRetries));
+    }
 #endif
 
     struct sockaddr_in sa;
