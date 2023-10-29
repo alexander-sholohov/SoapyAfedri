@@ -18,8 +18,7 @@ static void debug_print_for_thread(std::string const &str)
 
 AfedriDevice::AfedriDevice(std::string const &address, int port, std::string const &bind_address, int bind_port, int afedri_mode,
                            int num_channels, int map_ch0)
-    : _address(address),
-      _port(port),
+    : _afedri_control(address, port),
       _bind_address(bind_address),
       _bind_port(bind_port),
       _afedri_rx_mode(afedri_mode),
@@ -30,9 +29,8 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
       _saved_sample_rate(0.0),
       _saved_bandwidth(0.0)
 {
-    AfedriControl ac(_address, _port);
 
-    _version_info = ac.get_version_info();
+    _version_info = _afedri_control.get_version_info();
 
     // Check rx_mode
     if (_afedri_rx_mode > 5)
@@ -43,14 +41,14 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
     if (_afedri_rx_mode > 0)
     {
         auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // TODO: Check what channel to use here?
-        ac.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
+        _afedri_control.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
         SoapySDR::logf(SOAPY_SDR_WARNING, "Afedri set_rx_mode to %d", _afedri_rx_mode);
     }
 
     // Reset r802t AGC for channel 0. TODO: check channel index
     auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(0));
-    ac.set_r820t_lna_agc(ch, 0);
-    ac.set_r820t_mixer_agc(ch, 0);
+    _afedri_control.set_r820t_lna_agc(ch, 0);
+    _afedri_control.set_r820t_mixer_agc(ch, 0);
 
     if (_num_channels == 0 && _afedri_rx_mode != -1)
     {

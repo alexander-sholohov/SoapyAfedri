@@ -129,8 +129,7 @@ int AfedriDevice::activateStream(SoapySDR::Stream *stream, const int flags, cons
     StreamContext &stream_context = get_stream_context_by_id(stream_id);
     stream_context.active = true;
 
-    AfedriControl ac(_address, _port);
-    ac.start_capture(); // Activate stream. Multiple calls - not a problem.
+    _afedri_control.start_capture(); // Activate stream. Multiple calls - not a problem.
     SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri start capture");
 
     _udp_rx_thread_defer->get_ctx()->rx_active = true; // flag to allow process UDP RX data
@@ -165,8 +164,7 @@ int AfedriDevice::deactivateStream(SoapySDR::Stream *stream, const int flags, co
 
     if (num_active_streams == 0)
     {
-        AfedriControl ac(_address, _port);
-        ac.stop_capture();
+        _afedri_control.stop_capture();
         SoapySDR::logf(SOAPY_SDR_INFO, "Afedri stop capture");
 
         _udp_rx_thread_defer->get_ctx()->rx_active = false; // flag to stop process UDP RX data

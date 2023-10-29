@@ -144,8 +144,7 @@ class AfedriDevice : public SoapySDR::Device
   private:
     size_t remap_channel(size_t soapy_incoming_channel) const;
 
-    std::string _address;
-    int _port;
+    AfedriControl _afedri_control;
     std::string _bind_address;
     int _bind_port;
 

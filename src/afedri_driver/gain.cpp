@@ -41,28 +41,23 @@ void AfedriDevice::setGain(const int /*direction*/, const size_t channel, const 
 
     if (name == RF)
     {
-        AfedriControl ac(_address, _port);
-        ac.set_rf_gain(ch, value);
+        _afedri_control.set_rf_gain(ch, value);
     }
     else if (name == FE)
     {
-        AfedriControl ac(_address, _port);
-        ac.set_fe_gain(ch, value);
+        _afedri_control.set_fe_gain(ch, value);
     }
     else if (name == R820T_LNA_GAIN)
     {
-        AfedriControl ac(_address, _port);
-        ac.set_r820t_lna_gain(ch, value);
+        _afedri_control.set_r820t_lna_gain(ch, value);
     }
     else if (name == R820T_MIXER_GAIN)
     {
-        AfedriControl ac(_address, _port);
-        ac.set_r820t_mixer_gain(ch, value);
+        _afedri_control.set_r820t_mixer_gain(ch, value);
     }
     else if (name == R820T_VGA_GAIN)
     {
-        AfedriControl ac(_address, _port);
-        ac.set_r820t_vga_gain(ch, value);
+        _afedri_control.set_r820t_vga_gain(ch, value);
     }
     else
     {

@@ -91,13 +91,11 @@ void AfedriDevice::writeSetting(const std::string &key, const std::string &value
 
     if (lower_key == "r820t_lna_agc")
     {
-        AfedriControl ac(_address, _port);
-        ac.set_r820t_lna_agc(afedri_channel, str2boolint(value));
+        _afedri_control.set_r820t_lna_agc(afedri_channel, str2boolint(value));
     }
     else if (lower_key == "r820t_mixer_agc")
     {
-        AfedriControl ac(_address, _port);
-        ac.set_r820t_mixer_agc(afedri_channel, str2boolint(value));
+        _afedri_control.set_r820t_mixer_agc(afedri_channel, str2boolint(value));
     }
     else
     {

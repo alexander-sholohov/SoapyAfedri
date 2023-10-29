@@ -14,8 +14,7 @@ void AfedriDevice::setSampleRate(const int /* direction */, const size_t channel
 
     const auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(channel));
 
-    AfedriControl ac(_address, _port);
-    ac.set_sample_rate(ch, samp_rate);
+    _afedri_control.set_sample_rate(ch, samp_rate);
 
     const std::uint32_t quartz = _version_info.main_clock_frequency; // For me it was 76_800_000
     const std::uint32_t actual_samp_rate = AfedriControl::calc_actual_sample_rate(quartz, samp_rate);
