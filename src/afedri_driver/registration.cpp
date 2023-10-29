@@ -26,8 +26,6 @@ struct Params
     int port{};
     std::string bind_address{"0.0.0.0"};
     int bind_port{};
-    bool is_address_present{};
-    bool is_port_present{};
     int rx_mode{-1};     // not set by default
     int num_channels{0}; // 0 - means must be set automatically
     int map_ch0{-1};     // not active by default
@@ -60,14 +58,11 @@ Params Params::make_from_kwargs(const SoapySDR::Kwargs &args)
     if (args.count("address"))
     {
         res.address = args.at("address");
-        res.is_address_present = true;
     }
 
     if (args.count("port"))
     {
         res.port = std::stoi(args.at("port"));
-        res.is_port_present = true;
-
         res.bind_port = res.port; // use the same value for bind_port. Can be overwritten later.
     }
 
@@ -120,54 +115,62 @@ SoapySDR::KwargsList findMyDevice(const SoapySDR::Kwargs &args)
 
     myWSAStartup();
 
-    auto params = Params::make_from_kwargs(args);
     auto res = SoapySDR::KwargsList();
 
-    if (!params.is_address_present || !params.is_port_present)
-    {
-        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Neither address nor port has been provided. Run Net discovery method ...");
+    const auto devices = AfedriDiscovery::discovery();
 
-        const auto devices = AfedriDiscovery::discovery();
-        for (auto const &dev : devices)
+    if (devices.empty())
+    {
+        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: no any device found");
+    }
+
+    for (auto const &dev : devices)
+    {
+        const bool isAddressMatch = args.count("address") == 0 || args.at("address") == dev.address;
+        const bool isPortMatch = args.count("port") == 0 || args.at("port") == std::to_string(dev.port);
+        if (!isAddressMatch || !isPortMatch)
         {
+            continue;
+        }
+
+        auto m = SoapySDR::Kwargs();
+        auto label = std::string("afedri :: " + dev.address + ":" + std::to_string(dev.port));
+        m["label"] = label;
+        m["address"] = dev.address;
+        m["port"] = std::to_string(dev.port);
+        m["serial"] = dev.serial_number;
+        m["version_string"] = dev.name;
+        res.push_back(m);
+    }
+
+    bool isAddressAndPortProvided = args.count("address") != 0 && args.count("port") != 0;
+    if (res.empty() && isAddressAndPortProvided)
+    {
+        // adress and port was provided, but we haven't found this device by discovery process
+        // in this case we try to instantiate the device explicitly
+
+        auto params = Params::make_from_kwargs(args);
+
+        try
+        {
+            SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Force try to make device for params: %s", params.as_debug_string().c_str());
+            AfedriDevice ad(params.address, params.port, params.bind_address, params.bind_port, params.rx_mode, params.num_channels,
+                            params.map_ch0);
             auto m = SoapySDR::Kwargs();
-            auto label = std::string("afedri :: " + dev.address + ":" + std::to_string(dev.port));
+            auto label = std::string("afedri :: " + params.make_address_port());
             m["label"] = label;
-            m["address"] = dev.address;
-            m["port"] = std::to_string(dev.port);
-            m["serial"] = dev.serial_number;
-            m["version_string"] = dev.name;
+
+            m["version_string"] = ad.get_version_info().version_string;
+
             res.push_back(m);
 
-            SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: device detected: %s", label.c_str());
+            SoapySDR::logf(SOAPY_SDR_INFO, "Afedri device detected: %s", label.c_str());
         }
-
-        if (devices.empty())
+        catch (const std::exception &)
         {
-            SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: no any device found");
+            // we are not interesting in the error
+            // this simply means afedri hasn't been detected
         }
-
-        return res;
-    }
-
-    try
-    {
-        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Try to make device for params: %s", params.as_debug_string().c_str());
-        AfedriDevice ad(params.address, params.port, params.bind_address, params.bind_port, params.rx_mode, params.num_channels,
-                        params.map_ch0);
-        auto m = SoapySDR::Kwargs();
-        auto label = std::string("afedri :: " + params.make_address_port());
-        m["label"] = label;
-
-        m["version_string"] = ad.get_version_info().version_string;
-
-        res.push_back(m);
-
-        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri device detected: %s", label.c_str());
-    }
-    catch (const std::exception &)
-    {
-        // This means afedri hasn't been detected.
     }
 
     return res;
