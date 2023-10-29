@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 
@@ -351,9 +352,22 @@ std::vector<AfedriDiscovery::AfedriFoundItem> AfedriDiscovery::discovery()
 
     const auto addresses = enum_addresses();
 
+    // gather all afedri devices
     for (auto const &addr : addresses)
     {
         probe_interface(addr, res);
+    }
+
+    // remove duplicates based on address+port key
+    std::map<std::pair<std::string, int>, AfedriFoundItem> unique;
+    for (auto const &elm : res)
+    {
+        unique.insert(std::make_pair(std::make_pair(elm.address, elm.port), elm));
+    }
+    res.clear();
+    for (auto const &elm : unique)
+    {
+        res.push_back(elm.second);
     }
 
     return res;
