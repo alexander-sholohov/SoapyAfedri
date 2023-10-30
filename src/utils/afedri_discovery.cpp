@@ -307,9 +307,10 @@ static void probe_interface(AfedriDiscovery::InterfaceItem const &addr, std::vec
     if (bind(rx_sock, (struct sockaddr *)&sockaddr_rx, sizeof(sockaddr_rx)) < 0)
     {
         std::stringstream ss;
-        ss << "Bind error. " << strerror(errno);
+        ss << "Bind error. " << strerror(errno) << std::endl;
+        std::cerr << ss.str();
         closesocket(rx_sock);
-        throw std::runtime_error(ss.str());
+        return;
     }
 
     int tx_sock = (int)socket(AF_INET, SOCK_DGRAM, 0);
