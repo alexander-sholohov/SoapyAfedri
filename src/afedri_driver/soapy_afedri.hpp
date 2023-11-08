@@ -133,6 +133,8 @@ class AfedriDevice : public SoapySDR::Device
     /*******************************************************************
      * Settings API
      ******************************************************************/
+    SoapySDR::ArgInfoList getSettingInfo(void) const override;
+
     void writeSetting(const std::string &key, const std::string &value) override;
 
   public:

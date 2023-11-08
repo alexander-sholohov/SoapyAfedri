@@ -83,6 +83,33 @@ static int str2boolint(std::string const &s)
     return res;
 }
 
+SoapySDR::ArgInfoList AfedriDevice::getSettingInfo(void) const
+{
+    SoapySDR::ArgInfoList arg_list;
+
+    {
+        SoapySDR::ArgInfo arg;
+        arg.key = "r820t_lna_agc";
+        arg.value = "false";
+        arg.name = "R820T LNA AGC";
+        arg.description = "R820T LNA AGC";
+        arg.type = SoapySDR::ArgInfo::BOOL;
+        arg_list.push_back(arg);
+    }
+
+    {
+        SoapySDR::ArgInfo arg;
+        arg.key = "r820t_mixer_agc";
+        arg.value = "false";
+        arg.name = "R820T MIXER AGC";
+        arg.description = "R820T MIXER AGC";
+        arg.type = SoapySDR::ArgInfo::BOOL;
+        arg_list.push_back(arg);
+    }
+
+    return arg_list;
+}
+
 void AfedriDevice::writeSetting(const std::string &key, const std::string &value)
 {
     SoapySDR::logf(SOAPY_SDR_INFO, "Afedri in writeSetting. key=%s value=%s", key.c_str(), value.c_str());
