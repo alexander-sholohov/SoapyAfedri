@@ -2,7 +2,7 @@
 
 ## What is this thing?
 
-This is a SoapySDR driver for the Afedri SDR-Net device. It supports TCP/UDP only. You should know IP address and port to communicate with the device. 
+The SoapyAfedri project provides a plugin module to use the Afedri SDR-Net device within the SoapySDR API and software that supports SoapySDR. This driver supports only TCP/UDP communication transport with the device. 
 
 
 ## Dependencies
