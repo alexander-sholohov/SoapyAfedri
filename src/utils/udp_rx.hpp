@@ -5,17 +5,25 @@
 #include "buffer.hpp"
 
 #include <condition_variable>
+#include <deque>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <thread>
 
-struct ChannelItem
+struct StreamItem
 {
-    std::mutex mtx{}; // common mutex to protect access to any of buffers
+    StreamItem(int stream_id)
+        : unique_stream_id(stream_id){};
+
+    int unique_stream_id; // 0 means unused
+    std::mutex mtx{};     // common mutex to protect access to any of buffers
     std::condition_variable signal{};
     CBuffer buffer{1024 * 1024}; // 1Mb should be enough
 };
+
+// we use deque because it allows to store objects with deleted copy constructor
+typedef std::deque<StreamItem> StreamsWithinChannel;
 
 struct UdpRxContext
 {
@@ -35,7 +43,8 @@ struct UdpRxContext
     void stop_working_thread_close_socket(); // The only correct way to stop attached thread
 
     int sock;
-    std::vector<ChannelItem> channels; // possible number of elements in the vector: 1,2,4
+    std::vector<StreamsWithinChannel> channels; // possible number of elements in the vector: 1,2,4
+    std::mutex mtx_channel{};                   // mutex to protect multiple modify access to channels
     std::thread thr{};
     bool flag_stop{false};
     bool rx_active{false};

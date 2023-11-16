@@ -125,19 +125,32 @@ static void net_recv_operation(std::shared_ptr<UdpRxContext> ctx)
             pos += 2; // step on one I+Q pair
         }
 
-        // at now pos - is number of elements in each result buffer
+        // pos - number of elements in each result buffer
 
         // transfer from result buffers to buffers in context
         for (size_t channel = 0; channel < num_of_channels; channel++)
         {
-            std::unique_lock<std::mutex> lock(ctx->channels[channel].mtx); // protect buffer
-            ctx->channels[channel].buffer.put(arr_buf[channel], pos);      // put data to channel's buffer
+            for (auto &stream : ctx->channels[channel])
+            {
+                // only to active streams
+                if (stream.unique_stream_id)
+                {
+                    std::unique_lock<std::mutex> lock(stream.mtx); // protect buffer
+                    stream.buffer.put(arr_buf[channel], pos);      // put data to each stream within same channels
+                }
+            }
         }
 
         // Notify them all.
         for (size_t channel = 0; channel < num_of_channels; channel++)
         {
-            ctx->channels[channel].signal.notify_one();
+            for (auto &stream : ctx->channels[channel])
+            {
+                if (stream.unique_stream_id)
+                {
+                    stream.signal.notify_one();
+                }
+            }
         }
     }
 

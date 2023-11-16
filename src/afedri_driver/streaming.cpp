@@ -11,6 +11,19 @@
 #include <cstring>
 #include <sstream>
 
+// we have this due to lack of support std find_if in c++14
+static StreamsWithinChannel::iterator my_find_if(StreamsWithinChannel::iterator first, StreamsWithinChannel::iterator last,
+                                                 std::function<bool(const StreamItem &)> pred)
+{
+    while (first != last)
+    {
+        if (pred(*first))
+            return first;
+        ++first;
+    }
+    return last;
+}
+
 SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels,
                                             const SoapySDR::Kwargs & /*args*/)
 {
@@ -78,6 +91,27 @@ SoapySDR::Stream *AfedriDevice::setupStream(const int direction, const std::stri
         _configured_streams[just_obtained_stream_id] = StreamContext(wrk_channels, selected_format, false);
     }
 
+    // Add StreamItem to udp rx context
+    {
+        auto udp_rx_ctx = _udp_rx_thread_defer->get_ctx();
+        std::unique_lock<std::mutex> lock(udp_rx_ctx->mtx_channel);
+        for (size_t channel_id : wrk_channels)
+        {
+            auto &stream = udp_rx_ctx->channels[channel_id];
+            // find free StreamItem slot or create new one
+            auto pred = [](const StreamItem &stream_item) -> bool { return stream_item.unique_stream_id == 0; };
+            auto stream_it = my_find_if(stream.begin(), stream.end(), pred);
+            if (stream_it != stream.end())
+            {
+                stream_it->unique_stream_id = just_obtained_stream_id;
+            }
+            else
+            {
+                stream.emplace_back(just_obtained_stream_id);
+            }
+        }
+    }
+
     // Debug output
     {
         std::ostringstream ss;
@@ -102,6 +136,24 @@ void AfedriDevice::closeStream(SoapySDR::Stream *stream)
     SoapySDR::logf(SOAPY_SDR_DEBUG, "Afedri in closeStream stream_id=%d", stream_id);
 
     this->deactivateStream(stream, 0, 0);
+
+    // Remove StreamItem from udp rx context channels (make it inactive)
+    {
+        auto udp_rx_ctx = _udp_rx_thread_defer->get_ctx();
+        std::unique_lock<std::mutex> lock(udp_rx_ctx->mtx_channel);
+
+        // scan through all channels and make strem_items slot inactive
+        for (auto &channel : udp_rx_ctx->channels)
+        {
+            for (auto &stream_item : channel)
+            {
+                if (stream_item.unique_stream_id == stream_id)
+                {
+                    stream_item.unique_stream_id = 0;
+                }
+            }
+        }
+    }
 
     {
         std::unique_lock<std::mutex> lock(_streams_protect_mtx);
@@ -210,23 +262,25 @@ int AfedriDevice::readStream(SoapySDR::Stream *stream, void *const *buffs, const
 
     std::vector<std::vector<short>> read_data_for_channels(4); // 4 channels max
 
-    {
-        const size_t first_global_channel_idx = stream_context.channels[0];
+    auto stream_find_pred = [stream_id](const StreamItem &stream_item) -> bool { return stream_item.unique_stream_id == stream_id; };
 
-        std::unique_lock<std::mutex> lock(udp_rx_context->channels[first_global_channel_idx].mtx); // lock for buffer access
+    {
+        auto &stream = udp_rx_context->channels[stream_context.channels[0]];
+        auto stream_it = my_find_if(stream.begin(), stream.end(), stream_find_pred);
+
+        std::unique_lock<std::mutex> lock(stream_it->mtx);
 
         auto us = std::chrono::microseconds(timeoutUs);
-        auto pred = [&]() { return udp_rx_context->channels[first_global_channel_idx].buffer.elementsAvailable() > 0; };
-        bool is_signalled = udp_rx_context->channels[first_global_channel_idx].signal.wait_for(lock, us, pred);
+        auto pred = [&stream_it]() { return stream_it->buffer.elementsAvailable() > 0; };
+        bool is_signalled = stream_it->signal.wait_for(lock, us, pred);
         if (is_signalled)
         {
             // Number of elements in first channel limited by input parameter numElems
-            elements_to_read_from_first_channel =
-                std::min(max_elements_in_shorts, udp_rx_context->channels[first_global_channel_idx].buffer.elementsAvailable());
+            elements_to_read_from_first_channel = std::min(max_elements_in_shorts, stream_it->buffer.elementsAvailable());
+
             read_data_for_channels[0].resize(elements_to_read_from_first_channel);
-            udp_rx_context->channels[first_global_channel_idx].buffer.peek(read_data_for_channels[0].data(),
-                                                                           elements_to_read_from_first_channel);
-            udp_rx_context->channels[first_global_channel_idx].buffer.consume(elements_to_read_from_first_channel);
+            stream_it->buffer.peek(read_data_for_channels[0].data(), elements_to_read_from_first_channel);
+            stream_it->buffer.consume(elements_to_read_from_first_channel);
         }
     }
 
@@ -235,18 +289,18 @@ int AfedriDevice::readStream(SoapySDR::Stream *stream, void *const *buffs, const
         return SOAPY_SDR_TIMEOUT;
     }
 
-    // Well, ideally number of data available to read from each channel must be the equal, but for some reason we need
-    // this logic. Read data from other channels, but no more than from first channel.
+    // number of data available to read from each channel must be the equal, but for some reason we need a protection logic:
+    // read data from other channels, but no more than from the first channel.
     for (size_t idx = 1; idx < stream_context.channels.size(); idx++)
     {
-        size_t global_channel_idx = stream_context.channels[idx];
+        auto &stream = udp_rx_context->channels[stream_context.channels[idx]];
+        auto stream_it = my_find_if(stream.begin(), stream.end(), stream_find_pred);
 
-        std::unique_lock<std::mutex> lock(udp_rx_context->channels[global_channel_idx].mtx); // lock for buffer access
-        const size_t elements_to_read =
-            std::min(elements_to_read_from_first_channel, udp_rx_context->channels[global_channel_idx].buffer.elementsAvailable());
+        std::unique_lock<std::mutex> lock(stream_it->mtx); // lock for buffer access
+        const size_t elements_to_read = std::min(elements_to_read_from_first_channel, stream_it->buffer.elementsAvailable());
         read_data_for_channels[idx].resize(elements_to_read);
-        udp_rx_context->channels[global_channel_idx].buffer.peek(read_data_for_channels[idx].data(), elements_to_read);
-        udp_rx_context->channels[global_channel_idx].buffer.consume(elements_to_read);
+        stream_it->buffer.peek(read_data_for_channels[idx].data(), elements_to_read);
+        stream_it->buffer.consume(elements_to_read);
     }
 
     if (stream_context.format == SOAPY_SDR_CS16)
