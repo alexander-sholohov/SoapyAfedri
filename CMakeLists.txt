@@ -34,7 +34,7 @@ endif(WIN32)
 # #######################################################################
 # build the module
 # #######################################################################
-find_package(SoapySDR CONFIG)
+find_package(SoapySDR REQUIRED CONFIG)
 
 if(NOT SoapySDR_FOUND)
   message(WARNING "SoapySDR development files not found - skipping support")
