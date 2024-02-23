@@ -68,6 +68,8 @@ SOAPY_SDR_MODULE_UTIL(
   src/utils/buffer.cpp
   src/utils/udp_rx.cpp
   src/utils/udp_rx.hpp
+  src/utils/portable_utils.cpp
+  src/utils/portable_utils.h
 
   LIBRARIES ${AFEDRI_LIBRARIES}
 )

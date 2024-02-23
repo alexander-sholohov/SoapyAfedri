@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "inet_common.h"
+#include "portable_utils.h"
 
 constexpr size_t num_data_bytes_in_block = 1024;
 constexpr size_t num_bytes_expected = num_data_bytes_in_block + 4; // 1028
@@ -216,7 +217,7 @@ std::shared_ptr<UdpRxContext> UdpRxControl::start_thread(size_t number_of_channe
     {
         closesocket(sock);
         std::stringstream ss;
-        ss << "Bind error. address='" << bind_address << "' port=" << bind_port << " : " << strerror(errno);
+        ss << "Bind error. address='" << bind_address << "' port=" << bind_port << " : " << get_error_text();
         throw UdpRxError(ss.str());
     }
 

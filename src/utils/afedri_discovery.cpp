@@ -9,6 +9,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "portable_utils.h"
+
 // Win32 solution from
 // https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses
 
@@ -312,7 +314,7 @@ static void probe_interface(AfedriDiscovery::InterfaceItem const &addr, std::vec
     if (bind(rx_sock, (struct sockaddr *)&sockaddr_rx, sizeof(sockaddr_rx)) < 0)
     {
         std::stringstream ss;
-        ss << "Bind error. " << strerror(errno) << std::endl;
+        ss << "Bind error. " << get_error_text() << std::endl;
         std::cerr << ss.str();
         closesocket(rx_sock);
         return;
