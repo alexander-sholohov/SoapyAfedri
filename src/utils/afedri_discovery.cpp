@@ -295,63 +295,75 @@ static void probe_interface(AfedriDiscovery::InterfaceItem const &addr, std::vec
         setsockopt(rx_sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuseEnable, sizeof(reuseEnable));
     }
 
+    in_addr inaddress_broadcast;
+    inaddress_broadcast.s_addr = INADDR_BROADCAST;
+
     struct sockaddr_in sockaddr_rx;
     std::memset(&sockaddr_rx, 0, sizeof(sockaddr_rx));
 
     sockaddr_rx.sin_family = AF_INET;
     sockaddr_rx.sin_port = htons(DISCOVER_CLIENT_PORT);
-
-    //
-    // Broadcast UDP receiving are slightly different on Linux and Windows.
-    // This solution works for me for Linux/Windwos/macOS, but I'm not sure it is correct in general.
-    //
-#ifdef _WIN32
-    sockaddr_rx.sin_addr = addr.bind_address;
-#else
     sockaddr_rx.sin_addr.s_addr = INADDR_ANY;
-#endif
 
     if (bind(rx_sock, (struct sockaddr *)&sockaddr_rx, sizeof(sockaddr_rx)) < 0)
     {
         std::stringstream ss;
-        ss << "Bind error. " << get_error_text() << std::endl;
+        ss << "rx_sock bind error: " << get_error_text() << std::endl;
         std::cerr << ss.str();
         closesocket(rx_sock);
         return;
     }
 
-    int tx_sock = (int)socket(AF_INET, SOCK_DGRAM, 0);
-    if (tx_sock < 0)
+    for (int pass = 0; pass < 2; pass++)
     {
-        throw std::runtime_error("Socket error");
+        int tx_sock = (int)socket(AF_INET, SOCK_DGRAM, 0);
+        if (tx_sock < 0)
+        {
+            throw std::runtime_error("Socket error");
+        }
+
+        {
+            const int broadcastEnable = 1;
+            setsockopt(tx_sock, SOL_SOCKET, SO_BROADCAST, (const char *)&broadcastEnable, sizeof(broadcastEnable));
+        }
+
+        struct sockaddr_in sockaddr_tx;
+        std::memset(&sockaddr_tx, 0, sizeof(sockaddr_tx));
+
+        sockaddr_tx.sin_family = AF_INET;
+        sockaddr_tx.sin_port = htons(DISCOVER_SERVER_PORT);
+        sockaddr_tx.sin_addr = addr.bind_address;
+
+        struct sockaddr_in broadcast_sockaddr_tx = sockaddr_tx;
+        broadcast_sockaddr_tx.sin_addr = (pass == 1) ? inaddress_broadcast : addr.broadcast_address;
+
+        if (bind(tx_sock, (struct sockaddr *)&sockaddr_tx, sizeof(sockaddr_rx)) < 0)
+        {
+            std::stringstream ss;
+            ss << "tx_sock bind error: " << get_error_text() << std::endl;
+            std::cerr << ss.str();
+
+            closesocket(tx_sock);
+            continue;
+        }
+
+        DiscoveryStruct ds;
+        int length = sizeof(ds);
+        std::memset(&ds, 0, length);
+        ds.length[0] = length & 0xff;
+        ds.length[1] = (length >> 8) & 0xff;
+        ds.key[0] = KEY0;
+        ds.key[1] = KEY1;
+        ds.op = MSG_REQ;
+
+        sendto(tx_sock, (const char *)&ds, length, 0, (struct sockaddr *)&sockaddr_tx, sizeof(sockaddr));
+        sendto(tx_sock, (const char *)&ds, length, 0, (struct sockaddr *)&broadcast_sockaddr_tx, sizeof(sockaddr));
+        net_recv_operation(rx_sock, res);
+
+        closesocket(tx_sock);
     }
-
-    {
-        const int broadcastEnable = 1;
-        setsockopt(tx_sock, SOL_SOCKET, SO_BROADCAST, (const char *)&broadcastEnable, sizeof(broadcastEnable));
-    }
-
-    struct sockaddr_in sockaddr_tx;
-    std::memset(&sockaddr_tx, 0, sizeof(sockaddr_tx));
-
-    sockaddr_tx.sin_family = AF_INET;
-    sockaddr_tx.sin_port = htons(DISCOVER_SERVER_PORT);
-    sockaddr_tx.sin_addr = addr.broadcast_address;
-
-    DiscoveryStruct ds;
-    int length = sizeof(ds);
-    std::memset(&ds, 0, length);
-    ds.length[0] = length & 0xff;
-    ds.length[1] = (length >> 8) & 0xff;
-    ds.key[0] = KEY0;
-    ds.key[1] = KEY1;
-    ds.op = MSG_REQ;
-
-    sendto(tx_sock, (const char *)&ds, length, 0, (struct sockaddr *)&sockaddr_tx, sizeof(sockaddr));
-    net_recv_operation(rx_sock, res);
 
     closesocket(rx_sock);
-    closesocket(tx_sock);
 }
 
 std::vector<AfedriDiscovery::AfedriFoundItem> AfedriDiscovery::discovery()
