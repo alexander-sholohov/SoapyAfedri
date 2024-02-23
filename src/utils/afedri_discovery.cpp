@@ -84,6 +84,11 @@ static std::vector<AfedriDiscovery::InterfaceItem> _enum_addresses_win32()
                 continue;
             }
 
+            if (pCurrAddresses->OperStatus != IfOperStatusUp)
+            {
+                continue; // Ignore adapters not UP
+            }
+
             for (pUnicast = pCurrAddresses->FirstUnicastAddress; pUnicast; pUnicast = pUnicast->Next)
             {
                 if (pUnicast->Address.lpSockaddr->sa_family != AF_INET)
