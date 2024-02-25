@@ -29,11 +29,9 @@ double AfedriDevice::getSampleRate(const int /* direction */, const size_t /* ch
     return _saved_sample_rate;
 }
 
-std::vector<double> AfedriDevice::listSampleRates(const int /* direction */, const size_t /* channel */) const
+static void fill_golden_sample_rates76M8(std::vector<double> &results)
 {
-    std::vector<double> results;
-
-    // golden sample rates (assume we have crystal 76.8MHz)
+    // golden sample rates for crystal 76.8MHz
     results.push_back(48e3);
     results.push_back(50e3);
     results.push_back(60e3);
@@ -60,6 +58,57 @@ std::vector<double> AfedriDevice::listSampleRates(const int /* direction */, con
     results.push_back(1.6e6);
     results.push_back(1.92e6);
     results.push_back(2.4e6);
+}
+
+static void fill_golden_sample_rates80M0(std::vector<double> &results)
+{
+    // golden sample rates for crystal 80.0MHz
+    results.push_back(40e3);
+    results.push_back(50e3);
+    results.push_back(80e3);
+    results.push_back(100e3);
+    results.push_back(125e3);
+    results.push_back(160e3);
+    results.push_back(200e3);
+    results.push_back(250e3);
+    results.push_back(400e3);
+    results.push_back(500e3);
+    results.push_back(625e3);
+    results.push_back(800e3);
+    results.push_back(1e6);
+    results.push_back(1.25e6);
+    results.push_back(2e6);
+    results.push_back(2.5e6);
+}
+
+static void calc_golden_sample_rates(uint32_t quartz, std::vector<double> &results)
+{
+    for (int n = 500; n >= 8; n--)
+    {
+        int sr = quartz / 4 / n;
+        if (sr % 1000 == 0)
+        {
+            results.push_back(static_cast<double>(sr));
+        }
+    }
+}
+
+std::vector<double> AfedriDevice::listSampleRates(const int /* direction */, const size_t /* channel */) const
+{
+    std::vector<double> results;
+
+    if (_version_info.main_clock_frequency == 80000000)
+    {
+        fill_golden_sample_rates80M0(results);
+    }
+    else if (_version_info.main_clock_frequency == 76800000)
+    {
+        fill_golden_sample_rates76M8(results);
+    }
+    else
+    {
+        calc_golden_sample_rates(_version_info.main_clock_frequency, results);
+    }
 
     return results;
 }
