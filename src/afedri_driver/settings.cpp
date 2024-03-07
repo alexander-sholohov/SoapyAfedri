@@ -87,24 +87,27 @@ SoapySDR::ArgInfoList AfedriDevice::getSettingInfo(void) const
 {
     SoapySDR::ArgInfoList arg_list;
 
+    if (_version_info.is_r820t_present)
     {
-        SoapySDR::ArgInfo arg;
-        arg.key = "r820t_lna_agc";
-        arg.value = "false";
-        arg.name = "R820T LNA AGC";
-        arg.description = "R820T LNA AGC";
-        arg.type = SoapySDR::ArgInfo::BOOL;
-        arg_list.push_back(arg);
-    }
+        {
+            SoapySDR::ArgInfo arg;
+            arg.key = "r820t_lna_agc";
+            arg.value = "false";
+            arg.name = "R820T LNA AGC";
+            arg.description = "R820T LNA AGC";
+            arg.type = SoapySDR::ArgInfo::BOOL;
+            arg_list.push_back(arg);
+        }
 
-    {
-        SoapySDR::ArgInfo arg;
-        arg.key = "r820t_mixer_agc";
-        arg.value = "false";
-        arg.name = "R820T MIXER AGC";
-        arg.description = "R820T MIXER AGC";
-        arg.type = SoapySDR::ArgInfo::BOOL;
-        arg_list.push_back(arg);
+        {
+            SoapySDR::ArgInfo arg;
+            arg.key = "r820t_mixer_agc";
+            arg.value = "false";
+            arg.name = "R820T MIXER AGC";
+            arg.description = "R820T MIXER AGC";
+            arg.type = SoapySDR::ArgInfo::BOOL;
+            arg_list.push_back(arg);
+        }
     }
 
     return arg_list;

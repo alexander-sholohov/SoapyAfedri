@@ -21,9 +21,12 @@ std::vector<std::string> AfedriDevice::listGains(const int /*direction*/, const 
     results.push_back(RF);
     results.push_back(FE);
 
-    results.push_back(R820T_LNA_GAIN);
-    results.push_back(R820T_MIXER_GAIN);
-    results.push_back(R820T_VGA_GAIN);
+    if (_version_info.is_r820t_present)
+    {
+        results.push_back(R820T_LNA_GAIN);
+        results.push_back(R820T_MIXER_GAIN);
+        results.push_back(R820T_VGA_GAIN);
+    }
 
     return results;
 }

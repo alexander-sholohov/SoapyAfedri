@@ -53,6 +53,7 @@ class AfedriControl
         std::string interface_version;
         std::uint32_t main_clock_frequency{};
         int diversity_mode{};
+        bool is_r820t_present{};
     };
 
     VersionInfo get_version_info();
@@ -84,6 +85,8 @@ class AfedriControl
     //
     void set_overload_mode(int mode); // bit masks for 4 channels.
     void set_rx_mode(Channel channel, RxMode mode);
+    //
+    bool is_r820t_present();
 
     static std::uint32_t calc_actual_sample_rate(std::uint32_t quartz, std::uint32_t samp_rate);
 

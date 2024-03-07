@@ -48,7 +48,10 @@ SoapySDR::RangeList AfedriDevice::getFrequencyRange(const int /* direction */, c
     {
         // TODO:
         results.push_back(SoapySDR::Range(100000, 35 * 1000000));
-        results.push_back(SoapySDR::Range(35 * 1000000, 1450 * 1000000));
+        if (_version_info.is_r820t_present)
+        {
+            results.push_back(SoapySDR::Range(35 * 1000000, 1450 * 1000000));
+        }
     }
 
     return results;

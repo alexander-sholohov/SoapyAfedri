@@ -146,6 +146,9 @@ AfedriControl::VersionInfo AfedriControl::get_version_info()
     // diversity
     ret.diversity_mode = read_eeprom(8);
 
+    // r820t specific
+    ret.is_r820t_present = is_r820t_present();
+
     // HW FW version
     {
         std::vector<unsigned char> v = {0x4, 0x20, 0x4, 0x0};
@@ -434,6 +437,23 @@ void AfedriControl::set_rx_mode(Channel channel, RxMode mode)
     assert(v.size() == v[0]);
     _comm.send(v);
     auto rx_buf = _comm.read_with_timeout(default_wait_time, complete_read_condition);
+}
+
+bool AfedriControl::is_r820t_present()
+{
+    // HID_GENERIC_GET_R820T_REF_FREQ_COMMAND
+    std::vector<unsigned char> v = { 0x9, 0xe0, 0x2, 0x5b };
+    vec_fill_pads(v);
+    assert(v.size() == v[0]);
+    _comm.send(v);
+
+    auto rx_buf = _comm.read_with_timeout(default_wait_time, complete_read_condition);
+    if (rx_buf.size() < 9)
+    {
+        return false;
+    }
+    // For some new devices this solution gives us false positive result.
+    return (rx_buf[3] == 0x5b && rx_buf[4] && rx_buf[5] && rx_buf[6] && rx_buf[7]);
 }
 
 std::uint32_t AfedriControl::calc_actual_sample_rate(std::uint32_t quartz, std::uint32_t samp_rate)

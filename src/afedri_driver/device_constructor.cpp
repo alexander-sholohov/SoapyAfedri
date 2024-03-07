@@ -46,9 +46,12 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
     }
 
     // Reset r802t AGC for channel 0. TODO: check channel index
-    auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(0));
-    _afedri_control.set_r820t_lna_agc(ch, 0);
-    _afedri_control.set_r820t_mixer_agc(ch, 0);
+    if (_version_info.is_r820t_present)
+    {
+        auto ch = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(0));
+        _afedri_control.set_r820t_lna_agc(ch, 0);
+        _afedri_control.set_r820t_mixer_agc(ch, 0);
+    }
 
     if (_num_channels == 0 && _afedri_rx_mode != -1)
     {
@@ -116,6 +119,7 @@ SoapySDR::Kwargs AfedriDevice::getHardwareInfo(void) const
     m["interface_version"] = _version_info.interface_version;
     m["main_clock_frequency"] = std::to_string(_version_info.main_clock_frequency);
     m["diversity_mode"] = std::to_string(_version_info.diversity_mode);
+    m["is_r820t_present"] = std::to_string(_version_info.is_r820t_present);
 
     m["soapy_afedri_driver_version"] = VERSION;
     m["origin"] = "https://github.com/alexander-sholohov/SoapyAfedri";
