@@ -190,6 +190,12 @@ SoapySDR::Device *makeMyDevice(const SoapySDR::Kwargs &args)
         SoapySDR::logf(SOAPY_SDR_INFO, "afedri_key: %s - %s", it->first.c_str(), it->second.c_str());
     }
 
+    const bool isAddressAndPortProvided = args.count("address") != 0 && args.count("port") != 0;
+    if (!isAddressAndPortProvided)
+    {
+        throw std::runtime_error("Unable to create Afedri device without address and port");
+    }
+
     auto params = Params::make_from_kwargs(args);
     SoapySDR::logf(SOAPY_SDR_INFO, "Afedri driver: Making device for params: %s", params.as_debug_string().c_str());
 
