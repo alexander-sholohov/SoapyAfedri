@@ -38,7 +38,7 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
         _afedri_rx_mode = -1;
     }
 
-    if (_afedri_rx_mode > 0)
+    if (_afedri_rx_mode != -1)
     {
         auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // TODO: Check what channel to use here?
         _afedri_control.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
