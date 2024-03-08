@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <iostream>
 
-constexpr const char *VERSION = "1.0.1";
+constexpr const char *VERSION = "1.0.2";
 
 static void debug_print_for_thread(std::string const &str)
 {
