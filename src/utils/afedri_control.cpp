@@ -453,7 +453,7 @@ bool AfedriControl::is_r820t_present()
         return false;
     }
     // For some new devices this solution gives us false positive result.
-    return (rx_buf[3] == 0x5b && rx_buf[4] && rx_buf[5] && rx_buf[6] && rx_buf[7]);
+    return (rx_buf[3] == 0x5b && (rx_buf[4] || rx_buf[5] || rx_buf[6] || rx_buf[7]));
 }
 
 std::uint32_t AfedriControl::calc_actual_sample_rate(std::uint32_t quartz, std::uint32_t samp_rate)
