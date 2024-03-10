@@ -32,14 +32,15 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
 
     _version_info = _afedri_control.get_version_info();
 
-    // Check rx_mode
-    if (_afedri_rx_mode > 5)
+    // Validate provided  rx_mode
+    if (_afedri_rx_mode < 0 || _afedri_rx_mode > 5)
     {
         _afedri_rx_mode = -1;
     }
 
     if (_afedri_rx_mode != -1)
     {
+        // set rx mode only if provided
         auto ch = AfedriControl::make_afedri_channel_from_0based_index(0); // TODO: Check what channel to use here?
         _afedri_control.set_rx_mode(ch, static_cast<AfedriControl::RxMode>(_afedri_rx_mode));
         SoapySDR::logf(SOAPY_SDR_WARNING, "Afedri set_rx_mode to %d", _afedri_rx_mode);
@@ -53,27 +54,18 @@ AfedriDevice::AfedriDevice(std::string const &address, int port, std::string con
         _afedri_control.set_r820t_mixer_agc(ch, 0);
     }
 
-    if (_num_channels == 0 && _afedri_rx_mode != -1)
+    if (_num_channels > 0 && _num_channels <= 4)
     {
-        if (_afedri_rx_mode == 1 || _afedri_rx_mode == 2)
-        {
-            _num_channels = 2;
-        }
-        else if (_afedri_rx_mode == 4 || _afedri_rx_mode == 5)
-        {
-            _num_channels = 4;
-        }
-        else
-        {
-            _num_channels = 1;
-        }
+        // provided number of channels is valid, use it
+        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri force set _num_channels=%d", _num_channels);
     }
-    else if (_num_channels == 0 || _num_channels > 4)
+    else
     {
-        _num_channels = 1;
+        // get number of channels from readed rx mode
+        auto readed_rx_mode = _afedri_control.get_rx_mode();
+        _num_channels = AfedriControl::rx_mode_to_number_of_channels(readed_rx_mode);
+        SoapySDR::logf(SOAPY_SDR_INFO, "Afedri readed_rx_mode=%d, _num_channels=%d", readed_rx_mode, _num_channels);
     }
-
-    SoapySDR::logf(SOAPY_SDR_INFO, "Afedri _num_channels=%d", _num_channels);
 
     // prevent remap error
     if (_map_ch0 >= static_cast<int>(_num_channels))
@@ -118,7 +110,7 @@ SoapySDR::Kwargs AfedriDevice::getHardwareInfo(void) const
     m["hw_fw_version"] = _version_info.hw_fw_version;
     m["interface_version"] = _version_info.interface_version;
     m["main_clock_frequency"] = std::to_string(_version_info.main_clock_frequency);
-    m["diversity_mode"] = std::to_string(_version_info.diversity_mode);
+    m["eeprom_diversity_mode"] = std::to_string(_version_info.eeprom_diversity_mode);
     m["is_r820t_present"] = std::to_string(_version_info.is_r820t_present);
 
     m["soapy_afedri_driver_version"] = VERSION;

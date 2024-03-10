@@ -42,6 +42,7 @@ class AfedriControl
     };
 
     static Channel make_afedri_channel_from_0based_index(size_t channel_index);
+    static int rx_mode_to_number_of_channels(RxMode rx_mode);
 
     struct VersionInfo
     {
@@ -52,7 +53,7 @@ class AfedriControl
         std::string hw_fw_version;
         std::string interface_version;
         std::uint32_t main_clock_frequency{};
-        int diversity_mode{};
+        int eeprom_diversity_mode{};
         bool is_r820t_present{};
     };
 
@@ -85,6 +86,8 @@ class AfedriControl
     //
     void set_overload_mode(int mode); // bit masks for 4 channels.
     void set_rx_mode(Channel channel, RxMode mode);
+    RxMode get_rx_mode();
+
     //
     bool is_r820t_present();
 

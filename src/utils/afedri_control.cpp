@@ -100,6 +100,34 @@ AfedriControl::Channel AfedriControl::make_afedri_channel_from_0based_index(size
     return static_cast<Channel>(channel_index);
 }
 
+int AfedriControl::rx_mode_to_number_of_channels(AfedriControl::RxMode rx_mode)
+{
+    int res = 1;
+    switch (rx_mode)
+    {
+    case AfedriControl::RxMode::SingleChannelMode:
+        res = 1;
+        break;
+    case AfedriControl::RxMode::DualDiversityMode:
+        res = 2;
+        break;
+    case AfedriControl::RxMode::DualChannelMode:
+        res = 2;
+        break;
+    case AfedriControl::RxMode::DiversityInternalAddMode:
+        res = 1;
+        break;
+    case AfedriControl::RxMode::QuadDiversityMode:
+        res = 4;
+        break;
+    case AfedriControl::RxMode::QuadChannelMode:
+        res = 4;
+        break;
+    }
+
+    return res;
+}
+
 AfedriControl::AfedriControl(std::string const &address, int port)
     : _comm(address, port)
 {
@@ -144,7 +172,7 @@ AfedriControl::VersionInfo AfedriControl::get_version_info()
     }
 
     // diversity
-    ret.diversity_mode = read_eeprom(8);
+    ret.eeprom_diversity_mode = read_eeprom(8);
 
     // r820t specific
     ret.is_r820t_present = is_r820t_present();
@@ -439,10 +467,25 @@ void AfedriControl::set_rx_mode(Channel channel, RxMode mode)
     auto rx_buf = _comm.read_with_timeout(default_wait_time, complete_read_condition);
 }
 
+AfedriControl::RxMode AfedriControl::get_rx_mode()
+{
+    std::vector<unsigned char> v = {0x9, 0xe0, 0x2, 0xf};
+    vec_fill_pads(v);
+    assert(v.size() == v[0]);
+    _comm.send(v);
+    auto rx_buf = _comm.read_with_timeout(default_wait_time, complete_read_condition);
+    if (rx_buf.size() < 9 || rx_buf[3] != 0xf)
+    {
+        return RxMode::SingleChannelMode; // on error return single channel
+    }
+
+    return static_cast<RxMode>(rx_buf[4]);
+}
+
 bool AfedriControl::is_r820t_present()
 {
     // HID_GENERIC_GET_R820T_REF_FREQ_COMMAND
-    std::vector<unsigned char> v = { 0x9, 0xe0, 0x2, 0x5b };
+    std::vector<unsigned char> v = {0x9, 0xe0, 0x2, 0x5b};
     vec_fill_pads(v);
     assert(v.size() == v[0]);
     _comm.send(v);
