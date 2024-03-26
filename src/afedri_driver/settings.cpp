@@ -118,6 +118,7 @@ void AfedriDevice::writeSetting(const std::string &key, const std::string &value
     SoapySDR::logf(SOAPY_SDR_INFO, "Afedri in writeSetting. key=%s value=%s", key.c_str(), value.c_str());
     const std::string lower_key = to_lower(key);
     const auto afedri_channel = AfedriControl::make_afedri_channel_from_0based_index(remap_channel(0)); // TODO: check channel index
+    _saved_settings[key] = value;
 
     if (lower_key == "r820t_lna_agc")
     {
@@ -131,4 +132,15 @@ void AfedriDevice::writeSetting(const std::string &key, const std::string &value
     {
         SoapySDR::logf(SOAPY_SDR_WARNING, "Afedri in writeSetting.  key=%s ignored!", key.c_str());
     }
+}
+
+std::string AfedriDevice::readSetting(const std::string &key) const
+{
+    auto it = _saved_settings.find(key);
+    if (it == _saved_settings.end())
+    {
+        return "";
+    }
+
+    return it->second;
 }

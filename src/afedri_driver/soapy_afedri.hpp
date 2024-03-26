@@ -137,6 +137,8 @@ class AfedriDevice : public SoapySDR::Device
 
     void writeSetting(const std::string &key, const std::string &value) override;
 
+    std::string readSetting(const std::string &key) const override;
+
   public:
     AfedriControl::VersionInfo const &get_version_info() const;
 
@@ -163,6 +165,7 @@ class AfedriDevice : public SoapySDR::Device
     double _saved_sample_rate;
     double _saved_bandwidth;
     std::string _saved_antenna;
+    std::map<std::string, std::string> _saved_settings;
 
     std::unique_ptr<UdpRxContextDefer> _udp_rx_thread_defer;
     AfedriControl::VersionInfo _version_info;
